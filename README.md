@@ -14,12 +14,7 @@ Download the plugin, based on your webtrees version, and unpack it into `webtree
 
 | WebTrees version | zip | tarball |
 |------------------|-----|---------|
-| >= 1.7.x         | [zip](https://github.com/dkniffin/webtrees-openstreetmap/archive/v1.8.zip) | [tar.gz](https://github.com/dkniffin/webtrees-openstreetmap/archive/v1.8.tar.gz) |
-| < 1.7.x          | [zip](https://github.com/dkniffin/webtrees-openstreetmap/archive/v1.6.zip) | [tar.gz](https://github.com/dkniffin/webtrees-openstreetmap/archive/v1.6.tar.gz) |
-
-### via git
-
-`git clone https://github.com/oddityoverseer13/webtrees-openstreetmap.git <WEBTREES_MODULE_DIR>/openstreetmap`
+| >= 1.7.x         | [zip](https://github.com/Joppla/OSM4WebTrees/archive/OSM4WebTrees1.7.9-v.01.zip) | [tar.gz](https://github.com/Joppla/OSM4WebTrees/archive/OSM4WebTrees1.7.9-v.01.tar.gz) |
 
 ## Contributing
 
