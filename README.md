@@ -12,10 +12,11 @@ For now, this module relies a bit on the Google Maps module. In the future, the 
 ### via zip/tarball
 Download the plugin, based on your webtrees version, and unpack it into `webtrees/modules/openstreetmap`
 
-| OSM4WebTrees | WebTrees | zip | tarball | comment
-|   version    | version  |     |         |
-|--------------|----------|-----|---------|---------------
-|     0.01     | >= 1.7.x | [zip](https://github.com/Joppla/OSM4WebTrees/archive/OSM4WebTrees1.7.9-v.01.zip) | [tar.gz](https://github.com/Joppla/OSM4WebTrees/archive/OSM4WebTrees1.7.9-v.01.tar.gz) | Pre-release version
+
+
+| OSM4WebTrees | WebTrees | zip | tarball | comment          |
+|--------------|----------|-----|---------|--------------- |
+|    pv 0.01     | 1.7.9 | [zip](https://github.com/Joppla/OSM4WebTrees/archive/OSM4WebTrees1.7.9-v.01.zip) | [tar.gz](https://github.com/Joppla/OSM4WebTrees/archive/OSM4WebTrees1.7.9-v.01.tar.gz) | Pre-release version |
 
 ## Contributing
 
