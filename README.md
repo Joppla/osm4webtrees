@@ -1,3 +1,6 @@
++# OSM4WebTrees
++Module for WebTrees to show genealogical information on OSM
+
 This is a [webtrees](http://webtrees.net) plugin for displaying location data on openstreetmap tiles, and displayed via leaflet.
 
 ![Screenshot](screenshot.png)
