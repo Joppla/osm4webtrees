@@ -4,6 +4,7 @@ namespace vendor\WebtreesModules\OpenStreetMapModule;
 
 use Composer\Autoload\ClassLoader;
 use Fisharebest\Webtrees\Auth;
+use Fisharebest\Webtrees\Functions\Functions;
 use Fisharebest\Webtrees\Filter;
 use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Module\AbstractModule;
@@ -105,7 +106,7 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 		## This still needs some work. We'll probably want to copy this directly
 		##   from googlemaps
-		list($events, $geodata) = $this->getEvents();
+		list($events, $popup, $geodata) = $this->getEvents();
 
 		// If no places, display message and quit
 		if (!$geodata) {
@@ -113,7 +114,7 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 			return;
 		}
 
-		$this->drawMap($events);
+		$this->drawMap($events, $popup);
 
 	}
 
@@ -126,43 +127,61 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		$thisPerson = $controller->record;
 
 		### Get all people that we want events for ###
-		$people = array();
-		array_push($people, $thisPerson); # Self
+		
+		### This person self ###
+//		$Xref=$thisPerson->getXref();
+		$people[$thisPerson->getXref()] = $thisPerson; 
+//		array_push($people, $thisPerson); # Self
+
+		### Parents and Sibblings ###
 		foreach($thisPerson->getChildFamilies() as $family) {
 			# Parents
 			foreach($family->getSpouses() as $parent) {
-				array_push($people, $parent);
+				$people[$parent->getXref()] = $parent;
+//				array_push($people, $parent);
 			}
 
 			# Siblings
-			foreach($family->getChildren() as $child) {
-				if ( $child !== $thisPerson) {
-					array_push($people, $child);
+			foreach($family->getChildren() as $sibling) {
+				if ( $sibling !== $thisPerson) {
+					$xref = $sibling->getXref();
+					$people[$xref] = $sibling;
+//					array_push($people, $child);
 				}
 			}
-
 		}
+
+		### Spouse and own Children ###
 		foreach($thisPerson->getSpouseFamilies() as $family) {
 			# Spouse
 			foreach($family->getSpouses() as $spouse) {
 				if ( $spouse !== $thisPerson) {
-					array_push($people, $spouse);
+					$xref = $spouse->getXref();
+					$people[$xref] = $spouse;
+//					array_push($people, $spouse);
 				}
 			}
 
 			# Children
 			foreach($family->getChildren() as $child) {
-				array_push($people, $child);
+				if ( $child !== $thisPerson) {
+					$xref = $child->getXref();
+					$people[$xref] = $child;
+//				array_push($people, $child);
+				}
 			}
-
 		}
 
 		# Map each person to their facts
-		foreach($people as $person) {
-			$xref = $person->getXref();
+		// Basis info over persoon vast leggen
+		foreach($people as $xref => $person) {
+			$popup[$xref]='';
+			$popup[$xref].='<span class="label">'.Functions::getCloseRelationshipName($thisPerson,$person).': </span><a href="'.$person->getHtmlUrl().'">'.$person->getFullName().' ('.$person->getLifeSpan().')</a>';
+		
+			//events uitlezen
 			$events[$xref] = array();
 			foreach($person->getFacts() as $fact) {
-				$placefact = new \FactPlace($fact);
+				$placefact = new \FactPlace($fact); //zie classes
 				array_push($events[$xref], $placefact);
 				if ($placefact->knownLatLon()) $geodata = true;
 			}
@@ -172,7 +191,7 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		}
 
 
-		return array($events,$geodata);
+		return array($events, $popup, $geodata);
 	}
 
 	private function includes($controller) {
@@ -195,38 +214,38 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		require_once $this->directory.'/classes/FactPlace.php';
 	}
 
-	private function drawMap($eventsMap) {
+	private function drawMap($eventsMap, $info) {
 		$attributionOsmString = 'Map data © <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors';
 		$attributionMapBoxString = 'Map data &copy; <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"http://mapbox.com\">Mapbox</a>';
 
 		echo '<div id=map>';
 		echo '</div>';
 		echo "<script>
-
+		
                 var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			attribution: '$attributionOsmString',
-			maxZoom: 18
+			maxZoom: 16
 		});
-
+		
 		var mapbox = L.tileLayer('//{s}.tiles.mapbox.com/v3/oddityoverseer13.ino7n4nl/{z}/{x}/{y}.png', {
 			attribution: '$attributionMapBoxString',
-			maxZoom: 18
+			maxZoom: 16
 		});
 
                 var map = L.map('map').fitWorld().setZoom(2);
 
 		osm.addTo(map);
-
+                
                 var baseLayers = {
                     'Mapbox': mapbox,
                     'OpenStreetMap': osm
                 };
 
                 L.control.layers(baseLayers).addTo(map);
-
+                
                 ";
-
-
+                
+                
 
 		// Set up markercluster
 		echo "var markers = new L.MarkerClusterGroup();" . "\n";
@@ -250,11 +269,16 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 			foreach($personEvents as $event) {
 				if ($event->knownLatLon()) {
 					$tag = $event->fact->getTag();
+
+					// adding info popup menu
+					$popup = $info[$xref];
+					$popup .= $event->shortSummary();
+
 					$options = array_key_exists($tag,$event_options_map) ? $event_options_map[$tag] : array('icon' => 'circle');
 					$options['markerColor'] = $colors[$color_i];
 					echo "var icon = L.VectorMarkers.icon(".json_encode($options).");";
 					echo "var marker = L.marker(".$event->getLatLonJSArray().", {icon: icon});" . "\n";
-					echo "marker.bindPopup('".$event->shortSummary()."');" . "\n";
+					echo "marker.bindPopup('".$popup."');" . "\n";
 
 					// Add to markercluster
 					echo "markers.addLayer(marker);" . "\n";
@@ -268,7 +292,7 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 				// Add polyline to map
 				echo "polyline.addTo(map);" . "\n";
 			}
-			$color_i = ($color_i + 1) % count($colors);
+			$color_i = ($color_i+1) % count($colors);
 		}
 
 		// Add markercluster to map
