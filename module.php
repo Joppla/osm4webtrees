@@ -27,12 +27,12 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 	// Extend AbstractModule. Unique internal name for this module. Must match the directory name
 	public function getName() {
-		return "openstreetmap";
+		return "OSM4WebTrees";
 	}
 
 	// Extend AbstractModule. This title should be normalized when this module will be added officially
 	public function getTitle() {
-		return /* I18N: Name of a module */ I18N::translate('OpenStreetMap');
+		return /* I18N: Name of a module */ I18N::translate('OpenMapStreets');
 	}
 
 	// Extend AbstractModule
@@ -127,10 +127,10 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		$thisPerson = $controller->record;
 
 		### Get all people that we want events for ###
-		
+
 		### This person self ###
 //		$Xref=$thisPerson->getXref();
-		$people[$thisPerson->getXref()] = $thisPerson; 
+		$people[$thisPerson->getXref()] = $thisPerson;
 //		array_push($people, $thisPerson); # Self
 
 		### Parents and Sibblings ###
@@ -175,19 +175,21 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		# Map each person to their facts
 		// Basis info over persoon vast leggen
 		foreach($people as $xref => $person) {
-			$popup[$xref]='';
-			$popup[$xref].='<span class="label">'.Functions::getCloseRelationshipName($thisPerson,$person).': </span><a href="'.$person->getHtmlUrl().'">'.$person->getFullName().' ('.$person->getLifeSpan().')</a>';
-		
+			$popup[$xref]=array('CloseRelationshipName'=>Functions::getCloseRelationshipName($thisPerson,$person), 'HtmlUrl'=>$person->getHtmlUrl(), 'FullName'=>$person->getFullName(), 'LifeSpan'=>$person->getLifeSpan() );
+
 			//events uitlezen
+$facts=$person->getFacts();
+$facts= Functions::sortFacts($facts);
 			$events[$xref] = array();
 			foreach($person->getFacts() as $fact) {
+
 				$placefact = new \FactPlace($fact); //zie classes
 				array_push($events[$xref], $placefact);
 				if ($placefact->knownLatLon()) $geodata = true;
 			}
 
 			// sort facts by date
-			usort($events[$xref], array('FactPlace','CompareDate'));
+//			usort($events[$xref], array('FactPlace','CompareDate'));
 		}
 
 
@@ -196,67 +198,72 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 	private function includes($controller) {
 		// Leaflet JS
-		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/js/leaflet/leaflet.js"></script>';
+		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/leaflet.js"></script>';
 		// Leaflet CSS
-		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/css/leaflet.css" rel="stylesheet">';
-		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/css/osm-module.css" rel="stylesheet">';
+		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/leaflet.css" rel="stylesheet">';
+		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/osm-module.css" rel="stylesheet">';
 
 		// Leaflet markercluster
-		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/css/MarkerCluster.Default.css" rel="stylesheet">';
-		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/css/MarkerCluster.css" rel="stylesheet">';
-		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/js/leaflet/leaflet.markercluster.js"></script>';
+		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/MarkerCluster.Default.css" rel="stylesheet">';
+		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/MarkerCluster.css" rel="stylesheet">';
+		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/leaflet.markercluster.js"></script>';
 
 		// Leaflet Fontawesome markers
-		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/font-awesome-4.3.0/css/font-awesome.min.css">';
-		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/css/Leaflet.vector-markers.css">';
-		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, 'openstreetmap/js/leaflet/Leaflet.vector-markers.min.js"></script>';
+		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/font-awesome-4.3.0/css/font-awesome.min.css">';
+		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/Leaflet.vector-markers.css">';
+		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/dist/leaflet.awesome-markers.css">';
+		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/Leaflet.vector-markers.min.js"></script>';
+		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/dist/leaflet.awesome-markers.min.js"></script>';
 
 		require_once $this->directory.'/classes/FactPlace.php';
 	}
 
 	private function drawMap($eventsMap, $info) {
 		$attributionOsmString = 'Map data © <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors';
-		$attributionMapBoxString = 'Map data &copy; <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"http://mapbox.com\">Mapbox</a>';
+		$attributionMapBoxString = 'Map data &copy; <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors | Imagery © <a href=\"http://mapbox.com\">Mapbox</a>';
 
-		echo '<div id=map>';
-		echo '</div>';
-		echo "<script>
-		
-                var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-			attribution: '$attributionOsmString',
-			maxZoom: 16
-		});
-		
-		var mapbox = L.tileLayer('//{s}.tiles.mapbox.com/v3/oddityoverseer13.ino7n4nl/{z}/{x}/{y}.png', {
-			attribution: '$attributionMapBoxString',
-			maxZoom: 16
-		});
+		echo '
+			<div id=map></div>';
+		echo "
+			<script>
+				var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '$attributionOsmString',
+					maxZoom: 16
+				});
 
-                var map = L.map('map').fitWorld().setZoom(2);
+				var mapbox = L.tileLayer('//{s}.tiles.mapbox.com/v3/oddityoverseer13.ino7n4nl/{z}/{x}/		{y}.png', {
+					attribution: '$attributionMapBoxString',
+					maxZoom: 16
+				});
 
-		osm.addTo(map);
-                
-                var baseLayers = {
-                    'Mapbox': mapbox,
-                    'OpenStreetMap': osm
-                };
+				var map = L.map('map').fitWorld().setZoom(2);
 
-                L.control.layers(baseLayers).addTo(map);
-                
-                ";
-                
-                
+				osm.addTo(map);
+
+				var baseLayers = {
+					'Mapbox': mapbox,
+					'OpenStreetMap': osm
+				};
+
+				L.control.layers(baseLayers).addTo(map);
+				";
+
+
 
 		// Set up markercluster
 		echo "var markers = new L.MarkerClusterGroup();" . "\n";
 
-		$colors = array('#0C448C', '#D60500',  '#009E30', '#D6A000', '#008C65', '#AB0061', '#5B088F', '#D66500');
+		$colors = array('red', 'blue', 'green', 'purple', 'orange', 'darkred', 'lightred', 'beige', 'darkblue', 'darkgreen', 'cadetblue', 'darkpurple', 'pink', 'lightblue', 'lightgreen', 'gray', 'black', 'lightgray');
 		$event_options_map = array(
-			'BIRT' => array('icon' => 'birthday-cake'),
+			'BIRT' => array('icon' => 'star'),
+			'BAPM' => array('icon' => 'star'),
+			'CHR'  => array('icon' => 'star'),
 			'RESI' => array('icon' => 'home'),
 			'CENS' => array('icon' => 'users'),
 			'GRAD' => array('icon' => 'graduation-cap'),
-			'OCCU' => array('icon' => 'briefcase')
+			'OCCU' => array('icon' => 'briefcase'),
+			'MARR' => array('icon' => 'object-group'),
+			'DEAT' => array('icon' => 'plus-square')
 			);
 
 		$color_i = 0;
@@ -270,14 +277,20 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 				if ($event->knownLatLon()) {
 					$tag = $event->fact->getTag();
 
-					// adding info popup menu
-					$popup = $info[$xref];
+					// adding info to popup
+					$title = ucfirst(strip_tags($info[$xref]['CloseRelationshipName'].': '.$info[$xref]['FullName'].' ('.$info[$xref]['LifeSpan'].') | '));
+					$title .= strip_tags($event->shortSummary());
+
+					$popup = '<span class="label">'.ucfirst($info[$xref]['CloseRelationshipName']).': </span>';
+					$popup .= '<a href="'.$info[$xref]['HtmlUrl'].'">'.$info[$xref]['FullName'].'</a> ';
+					$popup .= '('.$info[$xref]['LifeSpan'].')';
 					$popup .= $event->shortSummary();
 
 					$options = array_key_exists($tag,$event_options_map) ? $event_options_map[$tag] : array('icon' => 'circle');
 					$options['markerColor'] = $colors[$color_i];
-					echo "var icon = L.VectorMarkers.icon(".json_encode($options).");";
-					echo "var marker = L.marker(".$event->getLatLonJSArray().", {icon: icon});" . "\n";
+					$test='birthday-cake';
+					echo "var icon = L.AwesomeMarkers.icon({icon: '".$options['icon']."', prefix: 'fa', markerColor: '".$options['markerColor']."', iconColor: 'white'});". "\n";
+					echo "var marker = L.marker(".$event->getLatLonJSArray().", {icon: icon, title: '".$title."'});" . "\n";
 					echo "marker.bindPopup('".$popup."');" . "\n";
 
 					// Add to markercluster
