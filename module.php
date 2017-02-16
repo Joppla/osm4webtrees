@@ -175,23 +175,34 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		# Map each person to their facts
 		// Basis info over persoon vast leggen
 		foreach($people as $xref => $person) {
-			$popup[$xref]=array('CloseRelationshipName'=>Functions::getCloseRelationshipName($thisPerson,$person), 'HtmlUrl'=>$person->getHtmlUrl(), 'FullName'=>$person->getFullName(), 'LifeSpan'=>$person->getLifeSpan() );
+			$popup[$xref]=array(
+				'CloseRelationshipName'=>Functions::getCloseRelationshipName($thisPerson,$person), 
+				'HtmlUrl'=>$person->getHtmlUrl(), 
+				'FullName'=>$person->getFullName(), 
+				'LifeSpan'=>$person->getLifeSpan() );
 
 			//events uitlezen
-$facts=$person->getFacts();
-$facts= Functions::sortFacts($facts);
+			$facts=$person->getFacts();
+			foreach ($person->getSpouseFamilies() as $family){
+				foreach ($family->getFacts() as $fact){
+					$facts[]=$fact;
+				}
+			}
+			
+			Functions::sortFacts($facts);	
+					
 			$events[$xref] = array();
-			foreach($person->getFacts() as $fact) {
-
+			foreach($facts as $fact) {
 				$placefact = new \FactPlace($fact); //zie classes
 				array_push($events[$xref], $placefact);
 				if ($placefact->knownLatLon()) $geodata = true;
 			}
 
-			// sort facts by date
+				
+
+			// sort facts by date => is done earlier
 //			usort($events[$xref], array('FactPlace','CompareDate'));
 		}
-
 
 		return array($events, $popup, $geodata);
 	}
@@ -210,11 +221,14 @@ $facts= Functions::sortFacts($facts);
 
 		// Leaflet Fontawesome markers
 		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/font-awesome-4.3.0/css/font-awesome.min.css">';
-		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/Leaflet.vector-markers.css">';
+
 		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/dist/leaflet.awesome-markers.css">';
-		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/Leaflet.vector-markers.min.js"></script>';
 		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/dist/leaflet.awesome-markers.min.js"></script>';
 
+		// Leaflet Vector-markers (there are bugs in the code of vertor-merkers, not in use)
+/*		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/Leaflet.vector-markers.css">';
+		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/Leaflet.vector-markers.min.js"></script>'; */
+		
 		require_once $this->directory.'/classes/FactPlace.php';
 	}
 
@@ -248,12 +262,11 @@ $facts= Functions::sortFacts($facts);
 				L.control.layers(baseLayers).addTo(map);
 				";
 
-
-
 		// Set up markercluster
 		echo "var markers = new L.MarkerClusterGroup();" . "\n";
 
-		$colors = array('red', 'blue', 'green', 'purple', 'orange', 'darkred', 'lightred', 'beige', 'darkblue', 'darkgreen', 'cadetblue', 'darkpurple', 'pink', 'lightblue', 'lightgreen', 'gray', 'black', 'lightgray');
+		// Set up color and design of markers
+		$colors = array('red', 'blue', 'green', 'purple', 'orange', 'darkred', 'salmon', 'beige', 'darkblue', 'darkgreen', 'cadetblue', 'darkslateblue', 'pink', 'lightblue', 'lightgreen', 'gray', 'lightgray');
 		$event_options_map = array(
 			'BIRT' => array('icon' => 'star'),
 			'BAPM' => array('icon' => 'star'),
@@ -271,7 +284,7 @@ $facts= Functions::sortFacts($facts);
 		foreach($eventsMap as $xref => $personEvents) {
 			// Set up polyline
 			echo "var polyline = L.polyline([], {color: '" . $colors[$color_i] . "'});" . "\n";
-			usort($personEvents, array('FactPlace','CompareDate'));
+//			usort($personEvents, array('FactPlace','CompareDate'));
 
 			foreach($personEvents as $event) {
 				if ($event->knownLatLon()) {
