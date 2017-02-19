@@ -27,12 +27,12 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 	// Extend AbstractModule. Unique internal name for this module. Must match the directory name
 	public function getName() {
-		return "OSM4WebTrees";
+		return "osm4webtrees";
 	}
 
 	// Extend AbstractModule. This title should be normalized when this module will be added officially
 	public function getTitle() {
-		return /* I18N: Name of a module */ I18N::translate('OpenMapStreets');
+		return /* I18N: Name of a module */ I18N::translate('OpenStreetMap');
 	}
 
 	// Extend AbstractModule
@@ -54,15 +54,16 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 	// Implement ModuleTabInterface
 	public function getTabContent() {
-		global $controller;
-		$this->individual_map();
+/*		global $controller;*/
+		$this->individualMap();
 	}
 
 	// Implement ModuleTabInterface
 	public function hasTabContent() {
-		global $SEARCH_SPIDER;
+/*		global $SEARCH_SPIDER;*/
 
-		return !$SEARCH_SPIDER;
+/*		return !$SEARCH_SPIDER;*/
+		return true;
 	}
 
 	// Implement ModuleTabInterface
@@ -72,7 +73,8 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 	// Implement ModuleTabInterface
 	public function canLoadAjax() {
-		return true;
+/*		return true;*/
+		return !Auth::isSearchEngine(); // Search engines cannot use AJAX
 	}
 
 	// Implement ModuleTabInterface
@@ -83,22 +85,22 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 	// Extend AbstractModule
 	// Here, we define the actions available for the module
 	public function modAction($mod_action) {
-		switch($mod_action){
+/*		switch($mod_action){
 		case 'pedigree_map':
-			$this->pedigree_map();
-		}
+			$this->pedigreeMap();
+		}*/
 
 	}
 
-	private function pedigree_map() {
+/*	private function pedigreeMap() {
 		global $controller;
 		$controller = new WT_Controller_Pedigree();
 
 		$this->includes($controller);
 		$this->drawMap();
-	}
+	}*/
 
-	private function individual_map() {
+	private function individualMap() {
 		global $controller;
 
 		$this->includes($controller);
@@ -220,7 +222,7 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/leaflet.markercluster.js"></script>';
 
 		// Leaflet Fontawesome markers
-		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/font-awesome-4.3.0/css/font-awesome.min.css">';
+		echo '<link rel="stylesheet" href="', WT_FONT_AWESOME_CSS_URL,'">';
 
 		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/dist/leaflet.awesome-markers.css">';
 		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/dist/leaflet.awesome-markers.min.js"></script>';
@@ -301,8 +303,9 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 					$options = array_key_exists($tag,$event_options_map) ? $event_options_map[$tag] : array('icon' => 'circle');
 					$options['markerColor'] = $colors[$color_i];
-					$test='birthday-cake';
+//					$test='birthday-cake';
 					echo "var icon = L.AwesomeMarkers.icon({icon: '".$options['icon']."', prefix: 'fa', markerColor: '".$options['markerColor']."', iconColor: 'white'});". "\n";
+//echo "var icon = L.icon({iconUrl: '/modules_v3/OSM4WebTrees/markers/marker.php'});";					
 					echo "var marker = L.marker(".$event->getLatLonJSArray().", {icon: icon, title: '".$title."'});" . "\n";
 					echo "marker.bindPopup('".$popup."');" . "\n";
 

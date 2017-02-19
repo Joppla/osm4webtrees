@@ -13,6 +13,9 @@ Version: 1.0
   display: block;
   text-align: center;
 }
+.vector-marker svg {
+    position: static;}  
+
 .vector-marker path {
   stroke: black;
   stroke-opacity: 0.4;
@@ -23,7 +26,7 @@ Version: 1.0
 }
 
 .vector-marker-shadow {
-  background: url("assets/shadow.png") no-repeat 0 0;
+  background-image: url("assets/shadow.png") no-repeat 0 0;
   width: 36px;
   height: 16px;
 }
