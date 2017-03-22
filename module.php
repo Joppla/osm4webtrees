@@ -4,7 +4,7 @@
  * filename:	module.php
  * made by:		Joppla
  * contact: 	https://github.com/Joppla/osm4webtrees/
- * version: 	PreRel-0.04
+ * version: 	PreRel-0.03
  * last mod.:	22 III 2017
  *
  * Description of Module:
@@ -42,7 +42,7 @@ use Fisharebest\Webtrees\Module\ModuleTabInterface;
 
 
 class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
-	const CUSTOM_VERSION	 = 'PreRel-0.04';
+	const CUSTOM_VERSION	 = 'PreRel-0.03';
 	const CUSTOM_WEBSITE	 = 'https://github.com/Joppla/osm4webtrees/';
 
 	var $directory;
