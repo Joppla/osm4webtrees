@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="250"
+	height="250"
+	viewBox="0 0 125 125">
+<circle
+	style="opacity:1;fill:#ffffff"
+	cx="62.5"
+	cy="62.5"
+	r="45"/>
+<path
+	style="fill:#000000"
+	d="m 47.5,22.5 h 30 l 10,25 -12.5,55 H 50 l -12.5,-55 10,-25 m 0,22 v 6 h 12 v 24 h 6 v -24 h 12 v -6 h -12 v -12 h -6 v 12 z"/>
+</svg>

@@ -1,0 +1,35 @@
+#map { 
+	height: 450px; 
+	border: 1px solid #888;
+	border-radius: 3px;
+	margin: 2px;
+	display: flex;
+	}
+
+.my-div-icon{
+	background-size: 100%;
+	background-repeat: no-repeat;
+	}
+.icon-birt{
+	background-image: url("images/birt_background.svg");
+	}
+.icon-deat{
+	background-image: url("images/deat_background.svg");
+	}
+.icon-marr{
+	background-image: url("images/marr_background.svg");
+	}	
+.icon-occu{
+	background-image: url("images/occu_background.svg");
+	}
+.icon-resi{
+	background-image: url("images/resi_background.svg");
+	}
+.icon-star{
+	background-image: url("images/star_background.svg");
+	}	
+
+.svg-icon-path{
+	fill-opacity: 0.6;	
+}
+

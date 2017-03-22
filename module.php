@@ -1,6 +1,36 @@
-<?php
+<?php # script module.php
 
-namespace vendor\WebtreesModules\OpenStreetMapModule;
+/***************************************************************
+ * filename:	module.php
+ * made by:		Joppla
+ * contact: 	https://github.com/Joppla/osm4webtrees/
+ * version: 	PreRel-0.04
+ * last mod.:	22 III 2017
+ *
+ * Description of Module:
+ * see: /README.md
+ *
+ * Files:
+ * -------------------
+ * /classes/FactPlace.php   classes
+ * /css/osm-module.css      stylesheet of the module
+ * /css/images/ 				 images for css
+ *
+ * Dependencies:
+ * -------------------
+ * Leaflet
+ * version: 1.0.3
+ * map:		/Leaflet/
+ * source:	http://leafletjs.com
+ *
+ * Leaflet.markercluster
+ * version: 1.0.4
+ * map:		/Leaflet.markercluster/
+ * source:	https://github.com/Leaflet/Leaflet.markercluster
+ *
+ ****************************************************************/
+
+namespace Joppla\WebtreesModules\OpenStreetMapModule;
 
 use Composer\Autoload\ClassLoader;
 use Fisharebest\Webtrees\Auth;
@@ -10,9 +40,13 @@ use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Module\AbstractModule;
 use Fisharebest\Webtrees\Module\ModuleTabInterface;
 
+
 class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
+	const CUSTOM_VERSION	 = 'PreRel-0.04';
+	const CUSTOM_WEBSITE	 = 'https://github.com/Joppla/osm4webtrees/';
 
 	var $directory;
+	var $action;
 
 	public function __construct()
 	{
@@ -21,23 +55,29 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		$this->action = Filter::get('mod_action');
 		// register the namespaces
 		$loader = new ClassLoader();
-		$loader->addPsr4('vendor\\WebtreesModules\\OpenStreetMapModule\\', $this->directory);
+		$loader->addPsr4('Joppla\\WebtreesModules\\OpenStreetMapModule\\', $this->directory , '/classes');
 		$loader->register();
 	}
 
-	// Extend AbstractModule. Unique internal name for this module. Must match the directory name
+	private function module(){
+		return new FactPlace;
+	}
+	// Extend AbstractModule.
+	// Unique internal name for this module. Must match the directory name
 	public function getName() {
 		return "osm4webtrees";
 	}
 
-	// Extend AbstractModule. This title should be normalized when this module will be added officially
+	// Extend AbstractModule.
+	// This title should be normalized when this module will be added officially
 	public function getTitle() {
 		return /* I18N: Name of a module */ I18N::translate('OpenStreetMap');
 	}
 
 	// Extend AbstractModule
+	// This gives the description of the module, or 'title' if mouse is going over tab.
 	public function getDescription() {
-		return /* I18N: Description of the “OSM” module */ I18N::translate('Show the location of places and events using OpenStreetMap (OSM)');
+		return /* I18N: Description of the “OSM” module */ I18N::translate('Show the location of places, events and the links between them using OpenStreetMap (OSM)');
 	}
 
 	// Extend AbstractModule
@@ -54,15 +94,11 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 	// Implement ModuleTabInterface
 	public function getTabContent() {
-/*		global $controller;*/
 		$this->individualMap();
 	}
 
 	// Implement ModuleTabInterface
 	public function hasTabContent() {
-/*		global $SEARCH_SPIDER;*/
-
-/*		return !$SEARCH_SPIDER;*/
 		return true;
 	}
 
@@ -80,7 +116,6 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 	// Implement ModuleTabInterface
 	public function getPreLoadContent() {
 	}
-
 
 	// Extend AbstractModule
 	// Here, we define the actions available for the module
@@ -178,9 +213,9 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		// Basis info over persoon vast leggen
 		foreach($people as $xref => $person) {
 			$popup[$xref]=array(
-				'CloseRelationshipName'=>Functions::getCloseRelationshipName($thisPerson,$person), 
-				'HtmlUrl'=>$person->getHtmlUrl(), 
-				'FullName'=>$person->getFullName(), 
+				'CloseRelationshipName'=>Functions::getCloseRelationshipName($thisPerson,$person),
+				'HtmlUrl'=>$person->getHtmlUrl(),
+				'FullName'=>$person->getFullName(),
 				'LifeSpan'=>$person->getLifeSpan() );
 
 			//events uitlezen
@@ -190,9 +225,9 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 					$facts[]=$fact;
 				}
 			}
-			
-			Functions::sortFacts($facts);	
-					
+
+			Functions::sortFacts($facts);
+
 			$events[$xref] = array();
 			foreach($facts as $fact) {
 				$placefact = new \FactPlace($fact); //zie classes
@@ -200,7 +235,7 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 				if ($placefact->knownLatLon()) $geodata = true;
 			}
 
-				
+
 
 			// sort facts by date => is done earlier
 //			usort($events[$xref], array('FactPlace','CompareDate'));
@@ -209,50 +244,106 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		return array($events, $popup, $geodata);
 	}
 
-	private function includes($controller) {
-		// Leaflet JS
-		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/leaflet.js"></script>';
-		// Leaflet CSS
-		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/leaflet.css" rel="stylesheet">';
-		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/osm-module.css" rel="stylesheet">';
+	protected function includeCss($css) {
+			return
+				'<script>
+					var newSheet=document.createElement("link");
+					newSheet.setAttribute("href","' . $css . '");
+					newSheet.setAttribute("type","text/css");
+					newSheet.setAttribute("rel","stylesheet");
+					newSheet.setAttribute("media","all");
+					document.getElementsByTagName("head")[0].appendChild(newSheet);
+				</script>';
 
-		// Leaflet markercluster
-		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/MarkerCluster.Default.css" rel="stylesheet">';
-		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/MarkerCluster.css" rel="stylesheet">';
-		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/leaflet.markercluster.js"></script>';
-
-		// Leaflet Fontawesome markers
-		echo '<link rel="stylesheet" href="', WT_FONT_AWESOME_CSS_URL,'">';
-
-		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/dist/leaflet.awesome-markers.css">';
-		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/dist/leaflet.awesome-markers.min.js"></script>';
-
-		// Leaflet Vector-markers (there are bugs in the code of vertor-merkers, not in use)
-/*		echo '<link rel="stylesheet" href="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/css/Leaflet.vector-markers.css">';
-		echo '<script src="', WT_STATIC_URL, WT_MODULES_DIR, $this->getName().'/js/leaflet/Leaflet.vector-markers.min.js"></script>'; */
-		
-		require_once $this->directory.'/classes/FactPlace.php';
 	}
 
+
+	private function includes($controller) {
+
+		// includes JS: Leaflet and Leaflet.markercluster
+		echo '<script src="'. $this->directory .'/Leaflet/leaflet.js"></script>';
+		echo '<script src="'. $this->directory .'/Leaflet.markercluster/leaflet.markercluster.js"></script>';
+
+		// includes CSS: Leaflet and Leaflet.markercluster
+		echo $this->includeCss($this->directory . '/Leaflet/leaflet.css');
+		echo $this->includeCss($this->directory . '/Leaflet.markercluster/MarkerCluster.Default.css'); //default
+		echo $this->includeCss($this->directory . '/Leaflet.markercluster/MarkerCluster.css'); // user designed
+
+		// includes CSS: for styling the map
+		echo $this->includeCss($this->directory . '/css/osm-module.css');
+
+		// includes the php for extra classes
+		// in my opinion can this be done in another way
+		require_once $this->directory.'/classes/FactPlace.php';
+
+	} // end of private function includes()
+
+
 	private function drawMap($eventsMap, $info) {
-		$attributionOsmString = 'Map data © <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors';
-		$attributionMapBoxString = 'Map data &copy; <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors | Imagery © <a href=\"http://mapbox.com\">Mapbox</a>';
+		$attributionOsmString = 'Map data © <a href=\"https://openstreetmap.org\">OpenStreetMap</a> contributors';
+		$attributionMapBoxString = 'Map data &copy; <a href=\"https://openstreetmap.org\">OpenStreetMap</a> contributors | Imagery © <a href=\"http://mapbox.com\">Mapbox</a>';
 
 		echo '
 			<div id=map></div>';
+
+/*
+echo <<<EOF
+<script>
+
+	var mymap = L.map('map').setView([51.505, -0.09], 13);
+
+	L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 18,
+		attribution: 'Map data',
+		id: 'mapbox.streets'
+	}).addTo(mymap);
+
+
+///// Marker versie HTLM en DivIcon
+	var myHtml = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="svg-icon marr-svg" style="width:25; height:50;"><path class="svg-icon marr-path" d="M 0.5 12.5 C 0.5 25 12.5 20 12.5 49 C 12.5 20 24.5 25 24.5 12.5 A 6.25 6.25 0 0 0 0.5 12.5 M 2.5 12.5 A 10 10 0 0 1 22.5 12.5A 10 10 0 0 1 2.5 12.5 Z" stroke-width="1" stroke="rgba(0,102,255,1)" fill="rgba(0,102,255,0.6)"></path></svg>';
+
+	var myIcon = L.divIcon({className: 'my-div-icon', iconSize: [25,50], html: myHtml });
+
+	L.marker([51.5, -0.09], {icon: myIcon}).addTo(mymap)
+		.bindPopup("<b>Hello world!</b><br />I am a popup."); //.openPopup();
+
+
+///// Marker met svg-icon.js
+	var marker = new L.Marker.SVGMarker([51.5, -0.095], {iconOptions: {className: "MARR", circleText: "hello", color: "red" }}).addTo(mymap);
+
+
+
+/*	var popup = L.popup();
+
+	function onMapClick(e) {
+		popup
+			.setLatLng(e.latlng)
+			.setContent("You clicked the map at " + e.latlng.toString())
+			.openOn(mymap);
+	}
+*/
+/*	mymap.on('click', onMapClick);
+*//*
+</script>
+EOF;
+*/
+
+		// setup kind of map
 		echo "
 			<script>
-				var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+				{
 					attribution: '$attributionOsmString',
 					maxZoom: 16
 				});
 
-				var mapbox = L.tileLayer('//{s}.tiles.mapbox.com/v3/oddityoverseer13.ino7n4nl/{z}/{x}/		{y}.png', {
+				var mapbox = L.tileLayer('//{s}.tiles.mapbox.com/v3/oddityoverseer13.ino7n4nl/{z}/{x}/		{y}.png',
+				{
 					attribution: '$attributionMapBoxString',
 					maxZoom: 16
 				});
 
-				var map = L.map('map').fitWorld().setZoom(2);
+				var map = L.map('map'); //.fitWorld().setZoom(2);
 
 				osm.addTo(map);
 
@@ -262,38 +353,43 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 				};
 
 				L.control.layers(baseLayers).addTo(map);
-				";
+			";
 
 		// Set up markercluster
-		echo "var markers = new L.MarkerClusterGroup();" . "\n";
+		echo "
+				var markers = new L.MarkerClusterGroup({maxClusterRadius: 20});
+			";
 
 		// Set up color and design of markers
-		$colors = array('red', 'blue', 'green', 'purple', 'orange', 'darkred', 'salmon', 'beige', 'darkblue', 'darkgreen', 'cadetblue', 'darkslateblue', 'pink', 'lightblue', 'lightgreen', 'gray', 'lightgray');
+		$colors = array(
+			'red', 'blue', 'green', 'purple', 'orange', 'darkred', 'salmon', 'beige', 'darkblue',
+			'darkgreen', 'cadetblue', 'darkslateblue', 'pink', 'lightblue', 'lightgreen', 'gray', 'lightgray');
+		// Set up kind of markers
 		$event_options_map = array(
-			'BIRT' => array('icon' => 'star'),
-			'BAPM' => array('icon' => 'star'),
-			'CHR'  => array('icon' => 'star'),
-			'RESI' => array('icon' => 'home'),
-			'CENS' => array('icon' => 'users'),
-			'GRAD' => array('icon' => 'graduation-cap'),
-			'OCCU' => array('icon' => 'briefcase'),
-			'MARR' => array('icon' => 'object-group'),
-			'DEAT' => array('icon' => 'plus-square')
+			'BIRT' => 'icon-birt',
+			'BAPM' => 'icon-birt',
+			'CHR'  => 'icon-birt',
+			'RESI' => 'icon-resi',
+			'OCCU' => 'icon-occu',
+			'MARR' => 'icon-marr',
+			'DEAT' => 'icon-deat'
 			);
 
+		//counter for color to zero
 		$color_i = 0;
+
 		// Populate the leaflet map with markers
 		foreach($eventsMap as $xref => $personEvents) {
 			// Set up polyline
 			echo "var polyline = L.polyline([], {color: '" . $colors[$color_i] . "'});" . "\n";
-//			usort($personEvents, array('FactPlace','CompareDate'));
 
 			foreach($personEvents as $event) {
 				if ($event->knownLatLon()) {
 					$tag = $event->fact->getTag();
 
 					// adding info to popup
-					$title = ucfirst(strip_tags($info[$xref]['CloseRelationshipName'].': '.$info[$xref]['FullName'].' ('.$info[$xref]['LifeSpan'].') | '));
+					$title = ucfirst(strip_tags($info[$xref]['CloseRelationshipName'].': '
+						.$info[$xref]['FullName'].' ('.$info[$xref]['LifeSpan'].') | '));
 					$title .= strip_tags($event->shortSummary());
 
 					$popup = '<span class="label">'.ucfirst($info[$xref]['CloseRelationshipName']).': </span>';
@@ -301,12 +397,19 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 					$popup .= '('.$info[$xref]['LifeSpan'].')';
 					$popup .= $event->shortSummary();
 
-					$options = array_key_exists($tag,$event_options_map) ? $event_options_map[$tag] : array('icon' => 'circle');
-					$options['markerColor'] = $colors[$color_i];
-//					$test='birthday-cake';
-					echo "var icon = L.AwesomeMarkers.icon({icon: '".$options['icon']."', prefix: 'fa', markerColor: '".$options['markerColor']."', iconColor: 'white'});". "\n";
-//echo "var icon = L.icon({iconUrl: '/modules_v3/OSM4WebTrees/markers/marker.php'});";					
-					echo "var marker = L.marker(".$event->getLatLonJSArray().", {icon: icon, title: '".$title."'});" . "\n";
+					$className = array_key_exists($tag,$event_options_map) ? $event_options_map[$tag] : 'icon-star';
+//					$options['markerColor'] = $colors[$color_i];
+
+					echo <<<EOF
+					var myHtml = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="svg-icon-svg" width="25" height="50"><path class="svg-icon-path" d="M 0.5 13 C 0.5 25 12.5 20 12.5 49.5 C 12.5 20 24.5 25 24.5 12.5 A 6.25 6.25 0 0 0 0.5 12.5 M 2.5 12.5 A 10 10 0 0 1 22.5 12.5 A 10 10 0 0 1 2.5 12.5 Z" stroke-width="1" stroke="$colors[$color_i]" fill="$colors[$color_i]"></path></svg>';
+
+					var myIcon = L.divIcon({className: 'my-div-icon $className', iconSize: [25,50], iconAnchor: [12.5,50], popupAnchor: [0,-50], html: myHtml });
+
+EOF;
+					echo "var marker = L.marker(".$event->getLatLonJSArray().", { icon: myIcon, title: '".$title."'});" . "\n";
+
+
+
 					echo "marker.bindPopup('".$popup."');" . "\n";
 
 					// Add to markercluster
@@ -328,12 +431,26 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		echo "var l = map.addLayer(markers);" . "\n";
 
 		// Zoom to bounds of polyline
-		echo "map.fitBounds(markers.getBounds());" . "\n";
+		echo "map.fitBounds(markers.getBounds(),{maxZoom:10});" . "\n";
 
 		echo "map.invalidateSize();" . "\n";
+//		echo "map.markerPane(markers);";
 
 		echo '</script>';
 	}
-}
+
+} // end of class OpenStreetMapModule()
+
+/*protected function includeCss($css) {
+	return
+		'<script>
+			var newSheet=document.createElement("link");
+				newSheet.setAttribute("href","' . $css . '");
+				newSheet.setAttribute("type","text/css");
+				newSheet.setAttribute("rel","stylesheet");
+				newSheet.setAttribute("media","all");
+				document.getElementsByTagName("head")[0].appendChild(newSheet);
+		</script>';
+	}*/
 
 return new OpenStreetMapModule();
