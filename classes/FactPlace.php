@@ -18,15 +18,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+
+namespace Joppla\WebtreesModules\OpenStreetMapModule;
+
 if (!defined('WT_WEBTREES')) {
 	header('HTTP/1.0 403 Forbidden');
 	exit;
 }
 
+
+
 use Fisharebest\Webtrees\Database;
 use Fisharebest\Webtrees\Fact;
 
-class FactPlace {
+class FactPlace extends OpenStreetMapModule {
 	public $fact;
 	private $data;
 	private $lat, $lon;
