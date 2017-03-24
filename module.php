@@ -5,7 +5,7 @@
  * made by:		Joppla
  * contact: 	https://github.com/Joppla/osm4webtrees/
  * version: 	PreRel-0.03
- * last mod.:	22 III 2017
+ * last mod.:	24 III 2017
  *
  * Description of Module:
  * see: /README.md
@@ -39,6 +39,7 @@ use Fisharebest\Webtrees\Filter;
 use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Module\AbstractModule;
 use Fisharebest\Webtrees\Module\ModuleTabInterface;
+// use Joppla\WebtreesModules\OpenStreetMapModule\classes;
 
 
 class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
@@ -59,9 +60,10 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		$loader->register();
 	}
 
-	private function module(){
+/*	private function module(){
 		return new FactPlace;
-	}
+	}*/
+	
 	// Extend AbstractModule.
 	// Unique internal name for this module. Must match the directory name
 	public function getName() {
@@ -77,7 +79,8 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 	// Extend AbstractModule
 	// This gives the description of the module, or 'title' if mouse is going over tab.
 	public function getDescription() {
-		return /* I18N: Description of the “OSM” module */ I18N::translate('Show the location of places, events and the links between them using OpenStreetMap (OSM)');
+		return /* I18N: Description of the “OSM” module */ 
+			I18N::translate('Show the location of places, events and the links between them using OpenStreetMap (OSM)');
 	}
 
 	// Extend AbstractModule
@@ -274,7 +277,7 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 		// includes the php for extra classes
 		// in my opinion can this be done in another way
-		require_once $this->directory.'/classes/FactPlace.php';
+//		require_once $this->directory.'/classes/FactPlace.php';
 
 	} // end of private function includes()
 
@@ -284,49 +287,10 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		$attributionMapBoxString = 'Map data &copy; <a href=\"https://openstreetmap.org\">OpenStreetMap</a> contributors | Imagery © <a href=\"http://mapbox.com\">Mapbox</a>';
 
 		echo '
-			<div id=map></div>';
-
-/*
-echo <<<EOF
-<script>
-
-	var mymap = L.map('map').setView([51.505, -0.09], 13);
-
-	L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		maxZoom: 18,
-		attribution: 'Map data',
-		id: 'mapbox.streets'
-	}).addTo(mymap);
-
-
-///// Marker versie HTLM en DivIcon
-	var myHtml = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="svg-icon marr-svg" style="width:25; height:50;"><path class="svg-icon marr-path" d="M 0.5 12.5 C 0.5 25 12.5 20 12.5 49 C 12.5 20 24.5 25 24.5 12.5 A 6.25 6.25 0 0 0 0.5 12.5 M 2.5 12.5 A 10 10 0 0 1 22.5 12.5A 10 10 0 0 1 2.5 12.5 Z" stroke-width="1" stroke="rgba(0,102,255,1)" fill="rgba(0,102,255,0.6)"></path></svg>';
-
-	var myIcon = L.divIcon({className: 'my-div-icon', iconSize: [25,50], html: myHtml });
-
-	L.marker([51.5, -0.09], {icon: myIcon}).addTo(mymap)
-		.bindPopup("<b>Hello world!</b><br />I am a popup."); //.openPopup();
-
-
-///// Marker met svg-icon.js
-	var marker = new L.Marker.SVGMarker([51.5, -0.095], {iconOptions: {className: "MARR", circleText: "hello", color: "red" }}).addTo(mymap);
-
-
-
-/*	var popup = L.popup();
-
-	function onMapClick(e) {
-		popup
-			.setLatLng(e.latlng)
-			.setContent("You clicked the map at " + e.latlng.toString())
-			.openOn(mymap);
-	}
-*/
-/*	mymap.on('click', onMapClick);
-*//*
-</script>
-EOF;
-*/
+		
+			<div id="osm-map"></div>
+			';
+		
 
 		// setup kind of map
 		echo "
@@ -334,16 +298,16 @@ EOF;
 				var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 				{
 					attribution: '$attributionOsmString',
-					maxZoom: 16
+					maxZoom: 18
 				});
 
 				var mapbox = L.tileLayer('//{s}.tiles.mapbox.com/v3/oddityoverseer13.ino7n4nl/{z}/{x}/		{y}.png',
 				{
 					attribution: '$attributionMapBoxString',
-					maxZoom: 16
+					maxZoom: 18
 				});
 
-				var map = L.map('map'); //.fitWorld().setZoom(2);
+				var map = L.map('osm-map').fitWorld().setZoom(10);
 
 				osm.addTo(map);
 
@@ -400,12 +364,12 @@ EOF;
 					$className = array_key_exists($tag,$event_options_map) ? $event_options_map[$tag] : 'icon-star';
 //					$options['markerColor'] = $colors[$color_i];
 
-					echo <<<EOF
-					var myHtml = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="svg-icon-svg" width="25" height="50"><path class="svg-icon-path" d="M 0.5 13 C 0.5 25 12.5 20 12.5 49.5 C 12.5 20 24.5 25 24.5 12.5 A 6.25 6.25 0 0 0 0.5 12.5 M 2.5 12.5 A 10 10 0 0 1 22.5 12.5 A 10 10 0 0 1 2.5 12.5 Z" stroke-width="1" stroke="$colors[$color_i]" fill="$colors[$color_i]"></path></svg>';
+					echo '
+					var myHtml = \'<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="svg-icon-svg" width="25" height="50"><path class="svg-icon-path" d="M 0.5 13 C 0.5 25 12.5 20 12.5 49.5 C 12.5 20 24.5 25 24.5 12.5 A 6.25 6.25 0 0 0 0.5 12.5 M 2.5 12.5 A 10 10 0 0 1 22.5 12.5 A 10 10 0 0 1 2.5 12.5 Z" stroke-width="1" stroke="'.$colors[$color_i].'" fill="'.$colors[$color_i].'"></path></svg>\';
 
-					var myIcon = L.divIcon({className: 'my-div-icon $className', iconSize: [25,50], iconAnchor: [12.5,50], popupAnchor: [0,-50], html: myHtml });
+					var myIcon = L.divIcon({className: \'my-div-icon '.$className.'\', iconSize: [25,50], iconAnchor: [12.5,50], popupAnchor: [0,-50], html: myHtml });
+					';
 
-EOF;
 					echo "var marker = L.marker(".$event->getLatLonJSArray().", { icon: myIcon, title: '".$title."'});" . "\n";
 
 
@@ -430,27 +394,23 @@ EOF;
 		// Add markercluster to map
 		echo "var l = map.addLayer(markers);" . "\n";
 
-		// Zoom to bounds of polyline
-		echo "map.fitBounds(markers.getBounds(),{maxZoom:10});" . "\n";
+		echo "var myBounds = markers.getBounds();";
+		
 
+		// Zoom to bounds of polyline
+//		echo "map.fitBounds(myBounds,{maxZoom:10});" . "\n";
+//		echo "map.panInsideBounds(markers.getBounds());" . "\n";
+
+//		echo "map.Zoom(10);"; 
+		echo "map.setView(myBounds.getCenter(),10);";
+//				echo "map.fitWorld().setZoom(5);";
 		echo "map.invalidateSize();" . "\n";
-//		echo "map.markerPane(markers);";
+
 
 		echo '</script>';
-	}
+	} // end of function drawMap()
 
 } // end of class OpenStreetMapModule()
 
-/*protected function includeCss($css) {
-	return
-		'<script>
-			var newSheet=document.createElement("link");
-				newSheet.setAttribute("href","' . $css . '");
-				newSheet.setAttribute("type","text/css");
-				newSheet.setAttribute("rel","stylesheet");
-				newSheet.setAttribute("media","all");
-				document.getElementsByTagName("head")[0].appendChild(newSheet);
-		</script>';
-	}*/
 
 return new OpenStreetMapModule();
