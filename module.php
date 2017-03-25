@@ -5,7 +5,7 @@
  * made by:		Joppla
  * contact: 	https://github.com/Joppla/osm4webtrees/
  * version: 	PreRel-0.03
- * last mod.:	24 III 2017
+ * last mod.:	25 III 2017
  *
  * Description of Module:
  * see: /README.md
