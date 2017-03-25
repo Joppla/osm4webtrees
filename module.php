@@ -43,7 +43,7 @@ use Fisharebest\Webtrees\Module\ModuleTabInterface;
 
 
 class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
-	const CUSTOM_VERSION	 = 'PreRel-0.03';
+	const CUSTOM_VERSION	 = 'PreRel-0.03'; 
 	const CUSTOM_WEBSITE	 = 'https://github.com/Joppla/osm4webtrees/';
 
 	var $directory;
@@ -56,7 +56,7 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		$this->action = Filter::get('mod_action');
 		// register the namespaces
 		$loader = new ClassLoader();
-		$loader->addPsr4('Joppla\\WebtreesModules\\OpenStreetMapModule\\', $this->directory , '/classes');
+		$loader->addPsr4('Joppla\\WebtreesModules\\OpenStreetMapModule\\', $this->directory . '/classes');
 		$loader->register();
 	}
 
@@ -233,31 +233,26 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 			$events[$xref] = array();
 			foreach($facts as $fact) {
-				$placefact = new \FactPlace($fact); //zie classes
+				$placefact = new FactPlace($fact); //zie classes
 				array_push($events[$xref], $placefact);
 				if ($placefact->knownLatLon()) $geodata = true;
 			}
-
-
-
-			// sort facts by date => is done earlier
-//			usort($events[$xref], array('FactPlace','CompareDate'));
 		}
 
 		return array($events, $popup, $geodata);
-	}
+
+	} // end of	private function getEvents() 
 
 	protected function includeCss($css) {
-			return
-				'<script>
-					var newSheet=document.createElement("link");
-					newSheet.setAttribute("href","' . $css . '");
-					newSheet.setAttribute("type","text/css");
-					newSheet.setAttribute("rel","stylesheet");
-					newSheet.setAttribute("media","all");
-					document.getElementsByTagName("head")[0].appendChild(newSheet);
-				</script>';
-
+		return
+			'<script>
+				var newSheet=document.createElement("link");
+				newSheet.setAttribute("href","' . $css . '");
+				newSheet.setAttribute("type","text/css");
+				newSheet.setAttribute("rel","stylesheet");
+				newSheet.setAttribute("media","all");
+				document.getElementsByTagName("head")[0].appendChild(newSheet);
+			</script>';
 	}
 
 
@@ -274,10 +269,6 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 
 		// includes CSS: for styling the map
 		echo $this->includeCss($this->directory . '/css/osm-module.css');
-
-		// includes the php for extra classes
-		// in my opinion can this be done in another way
-//		require_once $this->directory.'/classes/FactPlace.php';
 
 	} // end of private function includes()
 
@@ -398,11 +389,11 @@ class OpenStreetMapModule extends AbstractModule implements ModuleTabInterface {
 		
 
 		// Zoom to bounds of polyline
-//		echo "map.fitBounds(myBounds,{maxZoom:10});" . "\n";
+		echo "map.fitBounds(myBounds,{maxZoom:10});" . "\n";
 //		echo "map.panInsideBounds(markers.getBounds());" . "\n";
 
 //		echo "map.Zoom(10);"; 
-		echo "map.setView(myBounds.getCenter(),10);";
+//		echo "map.setView(myBounds.getCenter(),10);";
 //				echo "map.fitWorld().setZoom(5);";
 		echo "map.invalidateSize();" . "\n";
 
